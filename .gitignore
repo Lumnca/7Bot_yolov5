@@ -1,0 +1,14 @@
+# tfjs模型
+*.bin
+*.json
+
+# 图片
+*.jpg
+*.jpeg
+*.png
+*.svg
+*.gif
+
+# 视频格式
+*.mp4
+*.avi

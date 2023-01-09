@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta author="Lumnca">
+    <title>YOLOv5 RealTime TFJS v0.4</title>
+
+    <link rel="stylesheet" href="./static/css/main.css">
+    <!-- 应用库文件 -->
+    <script src="libraries/controller_dataset.js"></script>
+
+    <link href="https://pic.imgdb.cn/item/6216cb832ab3f51d911e24b6.png" rel="shortcut icon">
+    <!--  调用tfjs API -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.19.0/dist/tf.min.js"></script>
+    <!-- 调用JQuery API -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha384-vtXRMe3mGCbOeY7l30aIg8H9p3GdeSe4IFlP6G8JMa7o7lXvnz3GFKzPxzJdPfGK"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+        integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+        crossorigin="anonymous"></script>
+    <!-- 调用bootstrap API -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js"
+        integrity="sha384-+YQ4JLhjyBLPDQt//I+STsc9iw4uQqACwlvpslubQzn4u2UU2UFM80nGisd026JF"
+        crossorigin="anonymous"></script>
+
+    <script src="libraries/tf-data.min.js"></script>
+
+    <script src="libraries/p5.min.js"></script>
+    <script src="libraries/controller_dataset.js"></script>
+    <script language="javascript" type="text/javascript" src="libraries/p5.serialport.js"></script>
+
+
+    <!--Element UI-->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.7.0/build/styles/default.min.css">
+
+    <style>
+        #header{
+            line-height: 40px;
+            text-align: center;
+            background-color: #e3da2f;
+            font-size: 28px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+       <!-- 此处根据设备类型，自定义显示窗口的尺寸 -->
+       <div id="obj-show">
+        <!-- 视频层 -->
+        <div id="div-video">
+            <video id="video-rt" autoPlay playsInline muted></video>
+        </div>
+    </div>
+        <div id="app">
+          <el-container>
+            <el-header id="header">7Bot智能机械臂</el-header>
+            <el-main>
+                <el-row :gutter="20">
+                    <el-col :span="12">
+                        <div id="main-style">
+                            <div>
+                                <el-select v-model="cam" class="m-2" placeholder="Select" size="large" :change="changeCam">
+                                    <el-option
+                                      v-for="item in devs"
+                                      :key="item.value"
+                                      :label="item.label"
+                                      :value="item.value"
+                                    />
+                                </el-select>
+                                <el-button type="primary" @click="openCam()">开启摄像头</el-button>
+
+                                <el-select v-model="port" class="m-2" placeholder="选择设备串口" size="large">
+                                    <el-option
+                                      v-for="item in ports"
+                                      :key="item"
+                                      :label="item"
+                                      :value="item"
+                                    />
+                                </el-select>
+                                <el-button type="primary" @click="openBot()">连接设备</el-button>
+                            </div>
+
+         
+
+                           
+                        
+                     
+                        </div>
+
+                        
+                    </el-col>
+                    <el-col :span="12">
+                        <div class="block">
+                            <span class="demonstration">底座 角度: {{joints[0]}}</span>
+                            <el-slider @input="changeJoint(0)" v-model="joints[0]" :max="180"></el-slider>
+                        </div>
+    
+                        <div class="block">
+                            <span class="demonstration">底座左电机关节 角度: {{joints[1]}}</span>
+                            <el-slider @input="changeJoint(1)" v-model="joints[1]" :max="180"></el-slider>
+                        </div>
+    
+                        <div class="block">
+                            <span class="demonstration">底座右电机关节 角度: {{joints[2]}}</span>
+                            <el-slider @input="changeJoint(2)" v-model="joints[2]" :max="180"></el-slider>
+                        </div>
+    
+                        <div class="block">
+                            <span class="demonstration">前后转动关节 角度: {{joints[3]}}</span>
+                            <el-slider @input="changeJoint(3)" v-model="joints[3]" :max="180"></el-slider>
+                        </div>
+    
+                        <div class="block">
+                            <span class="demonstration">手臂前端旋转关节 角度: {{joints[4]}}</span>
+                            <el-slider @input="changeJoint(4)" v-model="joints[4]" :max="180"></el-slider>
+                        </div>
+    
+                        <div class="block">
+                            <span class="demonstration">夹子旋转 角度: {{joints[5]}}</span>
+                            <el-slider @input="changeJoint(5)" v-model="joints[5]" :max="180"></el-slider>
+                        </div>
+    
+                        <div class="block">
+                            <span class="demonstration">夹子 角度: {{joints[6]}}</span>
+                            <el-slider @input="changeJoint(6)" v-model="joints[6]" :max="80"></el-slider>
+                        </div>
+                    </el-col>
+                  </el-row>
+            </el-main>
+          </el-container>
+        </div>
+</body>
+<script src="https://unpkg.com/vue@2/dist/vue.js"></script>
+
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<!-- 调用 yolov5-rt-tfjs 主运行文件 -->
+<script src="./static/js/yolov5_rt_tfjs.js"></script>
+
+<script src="static/js/sortingBot.js"></script>
+
+<script>
+
+
+    let bot; 
+    /* 定义事件触发函数 */
+    // Device Port Selction Event 设置设备端口选择事件
+    /*document.getElementById("device-port").addEventListener("change", function () {
+        portName = this.value;
+        serial.open(portName, options);
+        //alert( "打开串口：" + portName );
+        bot = new SortingBot(serial);
+
+
+   
+    });*/
+
+    var app = new Vue({
+            el: '#app',
+            data: function () {
+                return {
+                    visible: false, msg: '', list: [
+
+                    ], joints: [90, 90, 65, 90, 90, 90, 80],
+                    bot: bot,devs : [],cam:'',ports:['COM3','COM1'],port:''
+                }
+            },
+            methods: {
+                changeJoint(V) {
+                    if (bot) {
+                       bot.writeReg (46 + V, this.joints[V])
+                    }
+                },
+                openCam(){
+                    console.log(this.cam)
+                    openCam(this.cam).then(v=>{
+                        console.log('open success!')
+                    }).catch(err=>{
+                        console.error(err)
+                    })
+                },
+                changeCam(){
+                    console.log(this.cam)
+                    openCam(this.cam)
+                }
+                ,openBot(){
+                    serial.open(this.port, options);
+                    //alert( "打开串口：" + portName );
+                    bot = new SortingBot(serial);
+                }
+            }
+        })
+
+
+
+
+
+
+
+
+</script>
+
+</html>
